@@ -259,10 +259,11 @@
         }
 
         /// <summary>
-        /// Searchs the redis keys.
+        /// Searchs the redis keys by specified pattern using KEYS/SCAN command or Lua scripting if supports.
         /// </summary>
         /// <returns>The redis keys.</returns>
         /// <remarks>
+        /// If your Redis Servers support Lua scripting it will use KEYS command using Lua script.
         /// If your Redis Servers support command SCAN , 
         /// IServer.Keys will use command SCAN to find out the keys.
         /// Following 
@@ -274,8 +275,20 @@
             var keys = new List<RedisKey>();
 
             foreach (var server in _servers)
-                keys.AddRange(server.Keys(pattern: pattern, database: _cache.Database));
-
+            {
+                var isLuaAllowed = server.Features.Scripting;
+                if (isLuaAllowed)
+                {
+                    //Lua scripting with KEYS
+                    var array = (RedisKey[])server.Execute("eval", $"return redis.call('KEYS', '{pattern}')", 0);
+                    keys.AddRange(array);
+                }
+                else
+                {
+                    keys.AddRange(server.Keys(pattern: pattern, database: _cache.Database));
+                }
+            }
+			
             return keys.Distinct().ToArray();
 
             //var keys = new HashSet<RedisKey>();
