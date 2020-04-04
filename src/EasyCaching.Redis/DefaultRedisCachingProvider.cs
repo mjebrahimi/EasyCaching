@@ -277,7 +277,7 @@
             foreach (var server in _servers)
             {
                 var isLuaAllowed = server.Features.Scripting;
-                if (isLuaAllowed)
+                if (isLuaAllowed && _options.UseLuaScripts)
                 {
                     //Lua scripting with KEYS
                     var array = (RedisKey[])server.Execute("eval", $"return redis.call('KEYS', '{pattern}')", 0);

@@ -11,5 +11,7 @@
         }
 
         public RedisDBOptions DBConfig { get; set; } = new RedisDBOptions();
+        
+        public bool UseLuaScripts { get; set; }
     }
 }

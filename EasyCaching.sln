@@ -56,6 +56,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "EasyCaching.Demo.ConsoleApp
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Build", "Build.csproj", "{43AD80E9-696B-4042-9D50-B26F48BE1928}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LuaScript.Benchmark", "test\LuaScript.Benchmark\LuaScript.Benchmark.csproj", "{EA39908F-FEE8-49D3-80F2-0DC2BCBC24D0}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -158,6 +160,10 @@ Global
 		{43AD80E9-696B-4042-9D50-B26F48BE1928}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{43AD80E9-696B-4042-9D50-B26F48BE1928}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{43AD80E9-696B-4042-9D50-B26F48BE1928}.Release|Any CPU.Build.0 = Release|Any CPU
+		{EA39908F-FEE8-49D3-80F2-0DC2BCBC24D0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{EA39908F-FEE8-49D3-80F2-0DC2BCBC24D0}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{EA39908F-FEE8-49D3-80F2-0DC2BCBC24D0}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{EA39908F-FEE8-49D3-80F2-0DC2BCBC24D0}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -187,6 +193,7 @@ Global
 		{3D48FD75-01D6-44F9-B7C3-CB6DE784F476} = {A0F5CC7E-155F-4726-8DEB-E966950B3FE9}
 		{359AE3CD-B8EE-49B1-95A1-685FD4D5EBE8} = {F88D727A-9F9C-43D9-90B1-D4A02BF8BC98}
 		{43AD80E9-696B-4042-9D50-B26F48BE1928} = {A0F5CC7E-155F-4726-8DEB-E966950B3FE9}
+		{EA39908F-FEE8-49D3-80F2-0DC2BCBC24D0} = {EBB55F65-7D07-4281-8D5E-7B0CA88E1AD0}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {63A57886-054B-476C-AAE1-8D7C8917682E}
