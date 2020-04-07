@@ -11,7 +11,14 @@
         }
 
         public RedisDBOptions DBConfig { get; set; } = new RedisDBOptions();
-        
-        public bool UseLuaScripts { get; set; }
+    }
+
+    public enum CountingMethod
+    {
+        LuaKeys,
+        LuaScan,
+        ExecuteScan,
+        Keys,
+        KeysPageSize5000
     }
 }

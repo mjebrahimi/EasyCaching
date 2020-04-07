@@ -54,7 +54,7 @@
         private readonly string _name;
 
         private readonly ProviderInfo _info;
-        
+
         /// <summary>
         /// Initializes a new instance of the <see cref="T:EasyCaching.Redis.DefaultRedisCachingProvider"/> class.
         /// </summary>
@@ -74,7 +74,7 @@
             ArgumentCheck.NotNullAndCountGTZero(serializers, nameof(serializers));
 
             this._name = name;
-            this._dbProvider = dbProviders.Single(x => x.DBProviderName.Equals(name));            
+            this._dbProvider = dbProviders.Single(x => x.DBProviderName.Equals(name));
             this._options = options;
             this._logger = loggerFactory?.CreateLogger<DefaultRedisCachingProvider>();
             this._cache = _dbProvider.GetDatabase();
@@ -270,25 +270,44 @@
         /// https://github.com/StackExchange/StackExchange.Redis/blob/master/StackExchange.Redis/StackExchange/Redis/RedisServer.cs#L289
         /// </remarks>
         /// <param name="pattern">Pattern.</param>
-        private RedisKey[] SearchRedisKeys(string pattern)
+        public RedisKey[] SearchRedisKeys(string pattern, CountingMethod countingMethod = CountingMethod.Keys)
         {
             var keys = new List<RedisKey>();
 
             foreach (var server in _servers)
             {
-                var isLuaAllowed = server.Features.Scripting;
-                if (isLuaAllowed && _options.UseLuaScripts)
+                switch (countingMethod)
                 {
-                    //Lua scripting with KEYS
-                    var array = (RedisKey[])server.Execute("eval", $"return redis.call('KEYS', '{pattern}')", 0);
-                    keys.AddRange(array);
-                }
-                else
-                {
-                    keys.AddRange(server.Keys(pattern: pattern, database: _cache.Database));
+                    case CountingMethod.LuaKeys:
+                        //Lua scripting with KEYS
+                        var array = (RedisKey[])server.Execute("eval", $"return redis.call('KEYS', '{pattern}')", 0);
+                        keys.AddRange(array);
+                        break;
+                    case CountingMethod.LuaScan:
+                        //Lua scripting with SCAN
+                        {
+                            var result = server.Execute("eval", $"return redis.call('SCAN', 0, 'MATCH', '{pattern}', 'COUNT', 2147483647)", 0);
+                            var keysArr = (RedisKey[])((RedisResult[])result)[1];
+                            keys.AddRange(keysArr);
+                        }
+                        break;
+                    case CountingMethod.ExecuteScan:
+                        //Execute Scan command
+                        {
+                            var result = server.Execute("SCAN", 0, "MATCH", pattern, "COUNT", 2147483647);
+                            var keysArr = (RedisKey[])((RedisResult[])result)[1];
+                            keys.AddRange(keysArr);
+                        }
+                        break;
+                    case CountingMethod.Keys:
+                        keys.AddRange(server.Keys(pattern: pattern, database: _cache.Database));
+                        break;
+                    case CountingMethod.KeysPageSize5000:
+                        keys.AddRange(server.Keys(pattern: pattern, database: _cache.Database, pageSize: 5000));
+                        break;
                 }
             }
-			
+
             return keys.Distinct().ToArray();
 
             //var keys = new HashSet<RedisKey>();

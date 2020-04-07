@@ -1,8 +1,10 @@
 ﻿using BenchmarkDotNet.Attributes;
 using BenchmarkDotNet.Configs;
 using BenchmarkDotNet.Engines;
+using BenchmarkDotNet.Order;
 using EasyCaching.Core;
 using EasyCaching.Core.Configurations;
+using EasyCaching.Redis;
 using Microsoft.Extensions.DependencyInjection;
 using System;
 using System.Collections.Generic;
@@ -12,17 +14,27 @@ namespace LuaScript.Benchmark
 {
     [SimpleJob(RunStrategy.Throughput)]
     [MemoryDiagnoser]
-    [CategoriesColumn]
     [KeepBenchmarkFiles(false)]
-    [GroupBenchmarksBy(BenchmarkLogicalGroupRule.ByCategory)]
+    [GroupBenchmarksBy(BenchmarkLogicalGroupRule.ByMethod)]
+    [Orderer(SummaryOrderPolicy.FastestToSlowest, MethodOrderPolicy.Declared)]
     public class GetCountBenchmark
     {
-        public IEasyCachingProvider RedisWithLua;
-        public IEasyCachingProvider RedisWithoutLua;
+        public DefaultRedisCachingProvider Redis;
         public string KeyPrefix = "test-prefix-";
         public string TargetKey;
         public string TargetPrefixKey;
 
+        public IEnumerable<CountingMethod> GetCountingMethods
+        {
+            get
+            {
+                yield return CountingMethod.LuaKeys;
+                yield return CountingMethod.LuaScan;
+                yield return CountingMethod.ExecuteScan;
+                yield return CountingMethod.Keys;
+                yield return CountingMethod.KeysPageSize5000;
+            }
+        }
         [GlobalSetup]
         public void Setup()
         {
@@ -33,21 +45,12 @@ namespace LuaScript.Benchmark
                 opt.UseRedis(config =>
                 {
                     config.DBConfig.Endpoints.Add(new ServerEndPoint("127.0.0.1", 6379));
-                    config.UseLuaScripts = true;
-                }, "WithLua");
-
-                opt.UseRedis(config =>
-                {
-                    config.DBConfig.Endpoints.Add(new ServerEndPoint("127.0.0.1", 6379));
-                    config.UseLuaScripts = false;
-                }, "WithoutLua");
+                });
             });
 
             var serviceProvider = services.BuildServiceProvider();
-            var factory = serviceProvider.GetRequiredService<IEasyCachingProviderFactory>();
 
-            RedisWithLua = factory.GetCachingProvider("WithLua");
-            RedisWithoutLua = factory.GetCachingProvider("WithoutLua");
+            Redis = (DefaultRedisCachingProvider)serviceProvider.GetRequiredService<IEasyCachingProvider>();
 
             var keyCount = 10_000;
 
@@ -55,44 +58,30 @@ namespace LuaScript.Benchmark
             for (int i = 0; i < keyCount; i++)
                 dictonary.Add(KeyPrefix + SequentialGuid.NewGuid().ToString(), string.Empty);
 
-            TargetKey = dictonary.Keys.ElementAt(keyCount / 2);
-            TargetPrefixKey = TargetKey.Remove(25); //in my test, about of 1000 keys starts with this prefix (because of sequential guid)
+            TargetKey = dictonary.Keys.ElementAt(keyCount / 2) + "*";
+            TargetPrefixKey = TargetKey.Remove(25) + "*"; //in my test, about of 1000 keys starts with this prefix (because of sequential guid)
 
-            RedisWithLua.SetAll(dictonary, TimeSpan.FromMinutes(5));
+            Redis.SetAll(dictonary, TimeSpan.FromMinutes(5));
         }
 
         [GlobalCleanup]
         public void Cleanup()
         {
-            RedisWithLua.RemoveByPrefix(KeyPrefix);
+            Redis.RemoveByPrefix(KeyPrefix);
         }
 
-        [Benchmark(Baseline = true, Description = "WithLua")]
-        [BenchmarkCategory("CountOneKey")]
-        public void CountOneKey_WithLua()
+        [Benchmark]
+        [ArgumentsSource(nameof(GetCountingMethods))]
+        public void CountOneKey(CountingMethod CountingMethod)
         {
-            RedisWithLua.GetCount(TargetKey);
+            Redis.SearchRedisKeys(TargetKey, CountingMethod);
         }
 
-        [Benchmark(Description = "WithoutLua")]
-        [BenchmarkCategory("CountOneKey")]
-        public void CountOneKey_WithoutLua()
+        [Benchmark]
+        [ArgumentsSource(nameof(GetCountingMethods))]
+        public void CountManyKeys(CountingMethod CountingMethod)
         {
-            RedisWithoutLua.GetCount(TargetKey);
-        }
-
-        [Benchmark(Baseline = true, Description = "WithLua")]
-        [BenchmarkCategory("CountManyKeys")]
-        public void CountManyKeys_WithLua()
-        {
-            RedisWithLua.GetCount(TargetPrefixKey);
-        }
-
-        [Benchmark(Description = "WithoutLua")]
-        [BenchmarkCategory("CountManyKeys")]
-        public void CountManyKeys_WithoutLua()
-        {
-            RedisWithoutLua.GetCount(TargetPrefixKey);
+            Redis.SearchRedisKeys(TargetPrefixKey, CountingMethod);
         }
     }
 }
