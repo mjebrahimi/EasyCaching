@@ -39,7 +39,7 @@ EasyCaching is an open source caching library that contains basic usages and som
 
 ### Step 1 : Install the package
 
-Choose one kinds of caching type that you needs and install it via Nuget.
+Choose caching provider that you need and install it via Nuget.
 
 ```
 Install-Package EasyCaching.InMemory
@@ -48,11 +48,11 @@ Install-Package EasyCaching.SQLite
 Install-Package EasyCaching.Memcached
 ```
 
-### Step 2 : Config in your Startup class
+### Step 2 : Configure Startup class
 
-Different types of caching hvae their own way to config.
+Each caching provider has it's own configuration options.
 
-Here is a sample show you how to config.
+Here is a sample configuration for InMemory and Redis caching provider.
 
 ```csharp
 public class Startup
@@ -99,7 +99,7 @@ public class Startup
 }
 ```
 
-###  Step 3 : Write code in you controller 
+###  Step 3 : Write code in your controller 
 
 ```csharp
 [Route("api/[controller]")]
@@ -137,7 +137,7 @@ public class ValuesController : Controller
 
 ## Documentation
 
-For more helpful information about EasyCaching, please click [here](http://easycaching.readthedocs.io/en/latest/) for EasyCaching's documentation. 
+Detailed EasyCaching documentation can be found [here](http://easycaching.readthedocs.io/en/latest/).
 
 ## Extension Libs
 
@@ -154,6 +154,10 @@ See [ToDo List](ToDoList.md)
 ## Contributing
 
 Pull requests, issues and commentary! 
+
+Also can join our QQ group.
+
+![](media/qqgroup.jpg?raw=true)
 
 ## License
 [![FOSSA Status](https://app.fossa.io/api/projects/git%2Bgithub.com%2Fdotnetcore%2FEasyCaching.svg?type=large)](https://app.fossa.io/projects/git%2Bgithub.com%2Fdotnetcore%2FEasyCaching?ref=badge_large)
